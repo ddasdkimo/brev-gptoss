@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+
+  vllm:
+    image: vllm/vllm-openai:latest
+    container_name: gptoss120b
+    runtime: nvidia
+
+    ipc: host
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      # NCCL tuning for PCIe (no NVLink on L40S)
+      - NCCL_P2P_LEVEL=SYS
+      - NCCL_IB_DISABLE=1
+      - NCCL_TIMEOUT=600
+      - CUDA_DEVICE_MAX_CONNECTIONS=1
+      # HuggingFace
+      - HF_HUB_ENABLE_HF_TRANSFER=1
+
+    volumes:
+      - ./hf_cache:/root/.cache/huggingface
+
+    command: >
+      vllm serve openai/gpt-oss-120b
+      --tensor-parallel-size 4
+      --pipeline-parallel-size 2
+      --gpu-memory-utilization 0.92
+      --max-model-len 32768
+      --served-model-name gpt-oss
+      --host 0.0.0.0
+      --port 8000
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 600s
