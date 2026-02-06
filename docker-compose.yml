@@ -25,15 +25,24 @@ services:
     volumes:
       - ./hf_cache:/root/.cache/huggingface
 
-    command: >
-      serve openai/gpt-oss-120b
-      --tensor-parallel-size 4
-      --pipeline-parallel-size 2
-      --gpu-memory-utilization 0.92
-      --max-model-len 32768
-      --served-model-name gpt-oss
-      --host 0.0.0.0
-      --port 8000
+    entrypoint: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+    command:
+      - "--model"
+      - "openai/gpt-oss-120b"
+      - "--tensor-parallel-size"
+      - "4"
+      - "--pipeline-parallel-size"
+      - "2"
+      - "--gpu-memory-utilization"
+      - "0.92"
+      - "--max-model-len"
+      - "32768"
+      - "--served-model-name"
+      - "gpt-oss"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8000"
 
     deploy:
       resources:
