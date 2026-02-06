@@ -26,7 +26,7 @@ services:
       - ./hf_cache:/root/.cache/huggingface
 
     command: >
-      vllm serve openai/gpt-oss-120b
+      serve openai/gpt-oss-120b
       --tensor-parallel-size 4
       --pipeline-parallel-size 2
       --gpu-memory-utilization 0.92
